@@ -1,12 +1,21 @@
 import streamlit as st
-from modules.encuesta_methods import * 
+from modules.form_methods import * 
 from modules.admin_methods import *
+from modules.api_methods import obtener_datos
 
 # Configuración de la página
 st.set_page_config(
     page_title="Encuesta Personal", 
     page_icon="📋"
 )
+
+# URL de la API (ajústala según tu configuración local)
+API_URL = "http://localhost:8000/api/datos"
+
+# Inicialización de datos en session_state
+if 'datos_api' not in st.session_state:
+    st.session_state.datos_api = None  # Almacén de los datos de la API
+    st.session_state.error_api = None  # Almacén de posibles errores
 
 # Inicialización de variables en session_state si no están definidas
 if 'pagina_actual' not in st.session_state:
@@ -15,6 +24,23 @@ if 'pagina_actual' not in st.session_state:
 if 'respuestas_guardadas' not in st.session_state:
     st.session_state.respuestas_guardadas = {}
 
+# Función para cargar los datos automáticamente
+def cargar_datos_api():
+    """
+    Obtiene los datos de la API y los almacena en st.session_state.
+    """
+    datos = obtener_datos(API_URL)
+    if "error" in datos:
+        st.session_state.error_api = datos["error"]
+        st.session_state.datos_api = None
+    else:
+        st.session_state.error_api = None
+        st.session_state.datos_api = datos
+
+# Llamar a la función al cargar la aplicación
+if st.session_state.datos_api is None:
+    cargar_datos_api()
+    
 # Función que coloca los botones en la barra lateral
 def buttons():
     with st.sidebar:
@@ -65,5 +91,5 @@ def contenido():
         st.write("### ¡Gracias por completar la encuesta!")
 
 # Mostrar los botones en la barra lateral y el contenido en la sección principal
-buttons()
+#buttons()
 contenido()
